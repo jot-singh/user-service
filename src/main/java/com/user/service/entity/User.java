@@ -12,9 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-public class User {
-    @Id
-    private String id;
+public class User extends BaseVO {
     private String username;
     private String password;
     private String email;

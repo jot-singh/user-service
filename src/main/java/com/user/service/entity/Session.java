@@ -10,9 +10,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "sessions")
 @Data
 @NoArgsConstructor
-public class Session {
-    @Id
-    private String id;
+public class Session extends BaseVO {
     private String username;
     private String token;
     private String expiredAt;

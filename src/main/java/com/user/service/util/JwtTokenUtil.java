@@ -3,7 +3,9 @@ package com.user.service.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.DigestAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecureDigestAlgorithm;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -23,10 +25,10 @@ public class JwtTokenUtil {
         SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
         return Jwts.builder()
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(expiration)
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .subject(subject)
+                .issuedAt(expiration)
+                .expiration(expiration)
+                .signWith(secretKey)
                 .compact();
     }
 
@@ -35,7 +37,8 @@ public class JwtTokenUtil {
         try {
             SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
-            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+
 
             return true;
         } catch (Exception e) {
@@ -47,7 +50,8 @@ public class JwtTokenUtil {
     // Get the subject (usually user ID) from a valid token
     public static String getSubjectFromToken(String token) {
         SecretKey secretKey = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-        Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+        Claims claims = Jwts.parser().verifyWith(secretKey).build().
+        parseSignedClaims(token).getPayload();
         return claims.getSubject();
     }
 }

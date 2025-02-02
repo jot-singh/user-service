@@ -14,4 +14,6 @@ public interface AuthService {
     AuthResponseDto signUp(AuthRequestDto authRequestDto) throws UserAlreadyExistsException;
 
     void logout(LogoutRequestDto logoutRequestDto);
+
+    void validateToken(String token) throws InvalidCredentialsException;
 }

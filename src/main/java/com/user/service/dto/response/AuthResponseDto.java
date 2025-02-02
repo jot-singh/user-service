@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-@SuperBuilder(toBuilder = true)
+@SuperBuilder
 @Getter(value = AccessLevel.PROTECTED)
 @Setter
 public class AuthResponseDto extends BaseResponseDto {

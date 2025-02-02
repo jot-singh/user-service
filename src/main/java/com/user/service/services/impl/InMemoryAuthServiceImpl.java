@@ -11,14 +11,32 @@ import com.user.service.error.InvalidCredentialsException;
 import com.user.service.error.UserAlreadyExistsException;
 import com.user.service.services.AuthService;
 import com.user.service.util.JwtTokenUtil;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+
+import javax.crypto.SecretKey;
 
 @Service
 public class InMemoryAuthServiceImpl implements AuthService {
     private final UserDao userDao;
     private final SessionDao sessionDao;
+    private SecretKey key = Keys.hmacShaKeyFor(
+        "namanisveryveryveryveryveryveryverycool"
+                .getBytes(StandardCharsets.UTF_8));;
 
     public InMemoryAuthServiceImpl(UserDao userDao, SessionDao sessionDao) {
         this.userDao = userDao;
@@ -77,6 +95,34 @@ public class InMemoryAuthServiceImpl implements AuthService {
     }
 
     private boolean validJWTToken(String token) {
-        return token != null && !token.isEmpty();
+        try {
+            validateToken(token);
+            return true;
+        } catch (InvalidCredentialsException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void validateToken(String token) throws InvalidCredentialsException {
+        Objects.requireNonNull(token, "Token is required");
+        try {
+            Jws<Claims> claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token);
+
+            Date expiryAt = claims.getPayload().getExpiration();
+            Date now = new Date();
+            if (expiryAt.before(now)) {
+                throw new InvalidCredentialsException("Token expired");
+            }
+            Long userId = claims.getPayload().get("user_id", Long.class);
+            if (userId == null) {
+                throw new InvalidCredentialsException("Invalid token");
+            }
+        } catch (Exception e) {
+            throw new InvalidCredentialsException("Invalid token");
+        }
     }
 }
