@@ -1,17 +1,21 @@
 package com.user.service.dao;
 
+import java.util.Optional;
+
 import com.user.service.entity.User;
 
 public interface UserDao {
     void save(User user);
 
-    User findByUsername(String username);
+    Optional<User> findByUsername(String username);
 
-    User findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
-    User findByUsernameAndPassword(String username, String password);
+    Optional<User> findByUsernameAndPassword(String username, String password);
 
-    User findByEmailAndPassword(String email, String password);
+    Optional<User> findByEmailAndPassword(String email, String password);
+
+    Optional<User> findById(Long id);
 
 //    void delete(User user);
 //

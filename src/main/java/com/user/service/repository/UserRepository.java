@@ -1,14 +1,19 @@
 package com.user.service.repository;
 
 import com.user.service.entity.User;
+
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    User findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
-    User findByUsername(String username);
+    Optional<User> findByUsername(String username);
 
-    User findByUsernameIgnoreCaseAndPassword(String username, String password);
+    Optional<User> findByUsernameIgnoreCaseAndPassword(String username, String password);
 
-    User findByEmailIgnoreCaseAndPassword(String email, String password);
+    Optional<User> findByEmailIgnoreCaseAndPassword(String email, String password);
+
+    Optional<User> findById(Long id);
 }

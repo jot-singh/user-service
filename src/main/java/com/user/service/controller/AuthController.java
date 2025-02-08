@@ -1,5 +1,17 @@
 package com.user.service.controller;
 
+import java.util.Objects;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 //Write a controller class with name AuthController inside controller package. This class should have below functions.
 //login(AuthRequestDto) - should return the jwt token for the user
 //signUp(AuthRequestDto) - should create user and return the created user
@@ -8,16 +20,12 @@ package com.user.service.controller;
 import com.user.service.dto.request.AuthRequestDto;
 import com.user.service.dto.request.LogoutRequestDto;
 import com.user.service.dto.response.AuthResponseDto;
+import com.user.service.dto.response.BaseResponseDto;
 import com.user.service.error.InvalidCredentialsException;
 import com.user.service.error.UserAlreadyExistsException;
 import com.user.service.services.AuthService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -35,8 +43,14 @@ public class AuthController {
     }
 
     @PostMapping("/signUp")
-    public ResponseEntity<AuthResponseDto> signUp(@RequestBody AuthRequestDto authRequestDto) throws UserAlreadyExistsException {
+    public ResponseEntity<BaseResponseDto> signUp(@RequestBody AuthRequestDto authRequestDto) throws UserAlreadyExistsException {
         return ResponseEntity.ok(authService.signUp(authRequestDto));
+    }
+
+    //Update User Details
+    @PutMapping("/update/{userId}")
+    public ResponseEntity<BaseResponseDto> updateUser(@RequestParam String userId, @RequestBody AuthRequestDto authRequestDto) throws UserAlreadyExistsException {
+        return ResponseEntity.ok(authService.updateUser(userId,authRequestDto));
     }
 
     @PostMapping("/logout")
@@ -46,7 +60,9 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<Void> validateToken(@RequestBody String token) throws InvalidCredentialsException {
+    public ResponseEntity<Void> validateToken(HttpServletRequest request) throws InvalidCredentialsException {
+        Objects.requireNonNull(request.getHeader("Authorization"), "Token is required");
+        String token = request.getHeader("Authorization").substring(7);
         authService.validateToken(token);
         return ResponseEntity.ok().build();
     }
