@@ -1,6 +1,10 @@
 package com.user.service.error;
 
-public class InvalidCredentialsException extends Exception {
+/**
+ * Exception thrown when user provides invalid login credentials.
+ */
+public class InvalidCredentialsException extends RuntimeException {
+    
     public InvalidCredentialsException(String message) {
         super(message);
     }
@@ -12,5 +16,8 @@ public class InvalidCredentialsException extends Exception {
     public InvalidCredentialsException(Throwable cause) {
         super(cause);
     }
-
+    
+    public InvalidCredentialsException() {
+        super("Invalid username or password");
+    }
 }

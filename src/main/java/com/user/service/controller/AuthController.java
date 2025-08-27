@@ -21,8 +21,6 @@ import com.user.service.dto.request.AuthRequestDto;
 import com.user.service.dto.request.LogoutRequestDto;
 import com.user.service.dto.response.AuthResponseDto;
 import com.user.service.dto.response.BaseResponseDto;
-import com.user.service.error.InvalidCredentialsException;
-import com.user.service.error.UserAlreadyExistsException;
 import com.user.service.services.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,18 +36,18 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody AuthRequestDto authRequestDto) throws InvalidCredentialsException {
+    public ResponseEntity<AuthResponseDto> login(@RequestBody AuthRequestDto authRequestDto) {
         return ResponseEntity.ok(authService.login(authRequestDto));
     }
 
     @PostMapping("/signUp")
-    public ResponseEntity<BaseResponseDto> signUp(@RequestBody AuthRequestDto authRequestDto) throws UserAlreadyExistsException {
+    public ResponseEntity<AuthResponseDto> signUp(@RequestBody AuthRequestDto authRequestDto) {
         return ResponseEntity.ok(authService.signUp(authRequestDto));
     }
 
     //Update User Details
     @PutMapping("/update/{userId}")
-    public ResponseEntity<BaseResponseDto> updateUser(@RequestParam String userId, @RequestBody AuthRequestDto authRequestDto) throws UserAlreadyExistsException {
+    public ResponseEntity<BaseResponseDto> updateUser(@RequestParam String userId, @RequestBody AuthRequestDto authRequestDto) {
         return ResponseEntity.ok(authService.updateUser(userId,authRequestDto));
     }
 
@@ -60,7 +58,7 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<Void> validateToken(HttpServletRequest request) throws InvalidCredentialsException {
+    public ResponseEntity<Void> validateToken(HttpServletRequest request) {
         Objects.requireNonNull(request.getHeader("Authorization"), "Token is required");
         String token = request.getHeader("Authorization").substring(7);
         authService.validateToken(token);

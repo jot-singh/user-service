@@ -3,7 +3,6 @@ package com.user.service.services.impl;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +17,7 @@ import com.user.service.entity.Session;
 import com.user.service.entity.User;
 import com.user.service.error.InvalidCredentialsException;
 import com.user.service.error.UserAlreadyExistsException;
+import com.user.service.error.UserNotFoundException;
 import com.user.service.services.AuthService;
 import com.user.service.util.JwtTokenUtil;
 
@@ -34,7 +34,7 @@ public class SubjectAuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponseDto login(AuthRequestDto authRequestDto) throws InvalidCredentialsException {
+    public AuthResponseDto login(AuthRequestDto authRequestDto) {
         Optional<User> userOptional = userDao.findByUsername(authRequestDto.getUsername());
         if (userOptional.isEmpty()) {
             throw new InvalidCredentialsException("Provided Credentials are invalid");
@@ -78,7 +78,7 @@ public class SubjectAuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponseDto signUp(AuthRequestDto authRequestDto) throws UserAlreadyExistsException {
+    public AuthResponseDto signUp(AuthRequestDto authRequestDto) {
         Optional<User> existingUser = userDao.findByUsername(authRequestDto.getUsername());
         if (existingUser.isPresent()) {
             throw new UserAlreadyExistsException("User exists");
@@ -96,10 +96,20 @@ public class SubjectAuthServiceImpl implements AuthService {
                 .role(authRequestDto.getRole() != null ? Role.valueOf(authRequestDto.getRole()) : Role.CUSTOMER)
                 .build();
         userDao.save(newUser);
-        
+
+        // Generate token for immediate login after signup
+        String token = JwtTokenUtil.generateToken(newUser.getUsername());
+        Session session = new Session();
+        session.setToken(token);
+        session.setUsername(newUser.getUsername());
+        session.setSessionId(UUID.randomUUID().toString());
+        sessionDao.save(session);
+
         return AuthResponseDto.builder()
+                .token(token)
+                .data(session)
                 .id(newUser.getEmail())
-                .message("User Account is created successfully")
+                .message("User account created successfully and logged in")
                 .build();
     }
 
@@ -155,15 +165,15 @@ public class SubjectAuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void validateToken(String token) throws InvalidCredentialsException {
+    public void validateToken(String token) {
         JwtTokenUtil.validateToken(token);
     }
 
     @Override
-    public BaseResponseDto updateUser(String userId, AuthRequestDto authRequestDto) throws UsernameNotFoundException {
+    public BaseResponseDto updateUser(String userId, AuthRequestDto authRequestDto) {
         Optional<User> userOptional = userDao.findById(Long.parseLong(userId));
         if (userOptional.isEmpty()) {
-            throw new UsernameNotFoundException("User not found");
+            throw new UserNotFoundException("User not found with ID: " + userId);
         }
         
         User user = userOptional.get();
