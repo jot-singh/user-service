@@ -31,3 +31,5 @@ replay_pid*
 /.springBeans
 /.factorypath
 /.apt_generated/
+
+*.DS_Store

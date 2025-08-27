@@ -41,9 +41,28 @@ public class SubjectAuthServiceImpl implements AuthService {
         }
         
         User user = userOptional.get();
+        
+        // Check if account is locked
+        if (user.getAccountLocked()) {
+            throw new InvalidCredentialsException("Account is locked due to multiple failed login attempts. Please contact support.");
+        }
+        
+        // Check if email is verified
+        if (!user.getEmailVerified()) {
+            throw new InvalidCredentialsException("Please verify your email address before logging in.");
+        }
+        
         if (!passwordEncoder.matches(authRequestDto.getPassword(), user.getPassword())) {
+            // Increment failed attempts
+            user.incrementFailedAttempts();
+            userDao.save(user);
             throw new InvalidCredentialsException("Provided Credentials are invalid");
         }
+        
+        // Successful login - reset failed attempts and update last login
+        user.resetFailedAttempts();
+        user.updateLastLogin();
+        userDao.save(user);
         
         String token = JwtTokenUtil.generateToken(user.getUsername());
         Session session = new Session();
@@ -74,7 +93,7 @@ public class SubjectAuthServiceImpl implements AuthService {
                 .username(authRequestDto.getUsername())
                 .password(passwordEncoder.encode(authRequestDto.getPassword())) // Encode password
                 .email(authRequestDto.getEmail())
-                .role(authRequestDto.getRole() != null ? Role.valueOf(authRequestDto.getRole()) : Role.USER)
+                .role(authRequestDto.getRole() != null ? Role.valueOf(authRequestDto.getRole()) : Role.CUSTOMER)
                 .build();
         userDao.save(newUser);
         
