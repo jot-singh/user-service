@@ -15,6 +15,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -36,9 +37,11 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.user.service.dao.UserDao;
 import com.user.service.security.jwt.JwtAuthenticationFilter;
+import com.user.service.security.CustomPermissionEvaluator;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SpringSecurityConfig {
 	@Autowired
 	private UserDao userDao;
@@ -68,13 +71,15 @@ public class SpringSecurityConfig {
 	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
 			throws Exception {
 		http
-			.securityMatcher("/auth/**", "/clients/**", "/h2-console/**")
+			.securityMatcher("/auth/**", "/clients/**", "/h2-console/**", "/users/**", "/admin/**")
 			.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/auth/login").permitAll()     // Allow login endpoint
 				.requestMatchers("/auth/signUp").permitAll()    // Allow signup endpoint
 				.requestMatchers("/clients/bootstrap/**").permitAll() // Allow bootstrap endpoints
 				.requestMatchers("/h2-console/**").permitAll()  // Allow H2 console for local dev
 				.requestMatchers("/error/**").permitAll()       // Allow error endpoints
+				.requestMatchers("/users/**").authenticated()   // User endpoints require authentication
+				.requestMatchers("/admin/**").hasRole("ADMIN")  // Admin endpoints require ADMIN role
 				.anyRequest().authenticated()
 			)
 			.csrf(csrf -> csrf
@@ -149,6 +154,11 @@ public class SpringSecurityConfig {
 	// Note: JpaRegisteredClientRepository is automatically configured as a @Component	@Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(userDetailsService());
+    }
+    
+    @Bean
+    public CustomPermissionEvaluator customPermissionEvaluator() {
+        return new CustomPermissionEvaluator();
     }
 
 }

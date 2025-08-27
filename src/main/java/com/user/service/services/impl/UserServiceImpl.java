@@ -18,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.user.service.controller.AdminController.AdminStatsResponse;
 
 /**
  * Implementation of UserService for user profile management
@@ -223,6 +226,88 @@ public class UserServiceImpl implements UserService {
         } catch (UserNotFoundException e) {
             return false;
         }
+    }
+    
+    // Admin methods for role-based access control
+    
+    @Override
+    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+        log.debug("Getting all users with pagination: {}", pageable);
+        
+        Page<User> users = userDao.findAll(pageable);
+        return users.map(this::mapToUserResponseDto);
+    }
+    
+    @Override
+    public List<UserResponseDto> getUsersByRole(Role role) {
+        log.debug("Getting users by role: {}", role);
+        
+        List<User> users = userDao.findByRole(role);
+        return users.stream()
+                .map(this::mapToUserResponseDto)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public UserResponseDto lockUserAccount(Long userId) {
+        log.debug("Locking user account: {}", userId);
+        
+        User user = getUserById(userId);
+        user.setAccountLocked(true);
+        userDao.save(user);
+        
+        log.info("User account locked successfully: {}", userId);
+        return mapToUserResponseDto(user);
+    }
+    
+    @Override
+    public UserResponseDto unlockUserAccount(Long userId) {
+        log.debug("Unlocking user account: {}", userId);
+        
+        User user = getUserById(userId);
+        user.setAccountLocked(false);
+        user.setFailedLoginAttempts(0);
+        userDao.save(user);
+        
+        log.info("User account unlocked successfully: {}", userId);
+        return mapToUserResponseDto(user);
+    }
+    
+    @Override
+    public UserResponseDto changeUserRole(Long userId, Role newRole) {
+        log.debug("Changing user role: {} to {}", userId, newRole);
+        
+        User user = getUserById(userId);
+        user.setRole(newRole);
+        userDao.save(user);
+        
+        log.info("User role changed successfully: {} to {}", userId, newRole);
+        return mapToUserResponseDto(user);
+    }
+    
+    @Override
+    public void deleteUserAccount(Long userId) {
+        log.debug("Deleting user account: {}", userId);
+        
+        User user = getUserById(userId);
+        userDao.delete(user);
+        
+        log.info("User account deleted successfully: {}", userId);
+    }
+    
+    @Override
+    public AdminStatsResponse getSystemStatistics() {
+        log.debug("Getting system statistics");
+        
+        long totalUsers = userDao.count();
+        long activeUsers = userDao.countByAccountLockedFalseAndEmailVerifiedTrue();
+        long lockedUsers = userDao.countByAccountLockedTrue();
+        long customers = userDao.countByRole(Role.CUSTOMER);
+        long merchants = userDao.countByRole(Role.MERCHANT);
+        long admins = userDao.countByRole(Role.ADMIN);
+        long moderators = userDao.countByRole(Role.MODERATOR);
+        
+        return new AdminStatsResponse(totalUsers, activeUsers, lockedUsers, customers, merchants, admins, moderators);
     }
     
     // Private helper methods

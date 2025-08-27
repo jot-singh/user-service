@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class UserController {
      * GET /users/{userId}/profile
      */
     @GetMapping("/{userId}/profile")
+    @PreAuthorize("hasPermission(#userId, 'user', 'READ') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDto> getUserProfile(@PathVariable Long userId) {
         log.info("Getting user profile for user ID: {}", userId);
         
@@ -48,6 +50,7 @@ public class UserController {
      * PUT /users/{userId}/profile
      */
     @PutMapping("/{userId}/profile")
+    @PreAuthorize("hasPermission(#userId, 'user', 'WRITE') or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDto> updateUserProfile(
             @PathVariable Long userId,
             @Valid @RequestBody UserProfileRequestDto requestDto) {
@@ -67,6 +70,7 @@ public class UserController {
      * GET /users/{userId}/addresses
      */
     @GetMapping("/{userId}/addresses")
+    @PreAuthorize("hasPermission(#userId, 'user', 'READ') or hasRole('ADMIN')")
     public ResponseEntity<List<AddressResponseDto>> getUserAddresses(@PathVariable Long userId) {
         log.info("Getting addresses for user ID: {}", userId);
         
@@ -84,6 +88,7 @@ public class UserController {
      * GET /users/{userId}/addresses/{addressId}
      */
     @GetMapping("/{userId}/addresses/{addressId}")
+    @PreAuthorize("hasPermission(#userId, 'user', 'READ') or hasRole('ADMIN')")
     public ResponseEntity<AddressResponseDto> getAddress(
             @PathVariable Long userId,
             @PathVariable Long addressId) {
@@ -103,6 +108,7 @@ public class UserController {
      * POST /users/{userId}/addresses
      */
     @PostMapping("/{userId}/addresses")
+    @PreAuthorize("hasPermission(#userId, 'user', 'WRITE') or hasRole('ADMIN')")
     public ResponseEntity<AddressResponseDto> createAddress(
             @PathVariable Long userId,
             @Valid @RequestBody AddressRequestDto requestDto) {
@@ -122,6 +128,7 @@ public class UserController {
      * PUT /users/{userId}/addresses/{addressId}
      */
     @PutMapping("/{userId}/addresses/{addressId}")
+    @PreAuthorize("hasPermission(#userId, 'user', 'WRITE') or hasRole('ADMIN')")
     public ResponseEntity<AddressResponseDto> updateAddress(
             @PathVariable Long userId,
             @PathVariable Long addressId,
@@ -142,6 +149,7 @@ public class UserController {
      * DELETE /users/{userId}/addresses/{addressId}
      */
     @DeleteMapping("/{userId}/addresses/{addressId}")
+    @PreAuthorize("hasPermission(#userId, 'user', 'DELETE') or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAddress(
             @PathVariable Long userId,
             @PathVariable Long addressId) {
@@ -161,6 +169,7 @@ public class UserController {
      * PUT /users/{userId}/addresses/{addressId}/default
      */
     @PutMapping("/{userId}/addresses/{addressId}/default")
+    @PreAuthorize("hasPermission(#userId, 'user', 'WRITE') or hasRole('ADMIN')")
     public ResponseEntity<AddressResponseDto> setDefaultAddress(
             @PathVariable Long userId,
             @PathVariable Long addressId) {
@@ -180,6 +189,7 @@ public class UserController {
      * GET /users/{userId}/addresses/default
      */
     @GetMapping("/{userId}/addresses/default")
+    @PreAuthorize("hasPermission(#userId, 'user', 'READ') or hasRole('ADMIN')")
     public ResponseEntity<AddressResponseDto> getDefaultAddress(@PathVariable Long userId) {
         log.info("Getting default address for user ID: {}", userId);
         

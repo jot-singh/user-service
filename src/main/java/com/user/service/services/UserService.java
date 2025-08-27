@@ -5,8 +5,12 @@ import com.user.service.dto.request.UserProfileRequestDto;
 import com.user.service.dto.response.AddressResponseDto;
 import com.user.service.dto.response.UserResponseDto;
 import com.user.service.entity.User;
+import com.user.service.entity.Role;
+import com.user.service.controller.AdminController.AdminStatsResponse;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Service interface for user profile management
@@ -67,4 +71,41 @@ public interface UserService {
      * Check if user exists and is active
      */
     boolean isUserActive(Long userId);
+    
+    // Admin methods for role-based access control
+    
+    /**
+     * Get all users with pagination (admin only)
+     */
+    Page<UserResponseDto> getAllUsers(Pageable pageable);
+    
+    /**
+     * Get users by role (admin only)
+     */
+    List<UserResponseDto> getUsersByRole(Role role);
+    
+    /**
+     * Lock user account (admin only)
+     */
+    UserResponseDto lockUserAccount(Long userId);
+    
+    /**
+     * Unlock user account (admin only)
+     */
+    UserResponseDto unlockUserAccount(Long userId);
+    
+    /**
+     * Change user role (admin only)
+     */
+    UserResponseDto changeUserRole(Long userId, Role newRole);
+    
+    /**
+     * Delete user account (admin only)
+     */
+    void deleteUserAccount(Long userId);
+    
+    /**
+     * Get system statistics (admin only)
+     */
+    AdminStatsResponse getSystemStatistics();
 }
