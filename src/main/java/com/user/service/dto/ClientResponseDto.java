@@ -1,65 +1,33 @@
 package com.user.service.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+/**
+ * DTO for OAuth2 client responses
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClientResponseDto {
     
+    @NotBlank(message = "Client ID is required")
+    @Size(max = 50, message = "Client ID must be less than 50 characters")
     private String clientId;
+    
+    @Size(max = 255, message = "Client secret must be less than 255 characters")
     private String clientSecret; // Only returned during registration
+    
+    @NotBlank(message = "Client name is required")
+    @Size(max = 100, message = "Client name must be less than 100 characters")
     private String clientName;
-    private List<String> redirectUris;
-    private List<String> scopes;
     
-    // Constructors
-    public ClientResponseDto() {}
+    private List<@Size(max = 500, message = "Redirect URI must be less than 500 characters") String> redirectUris;
     
-    public ClientResponseDto(String clientId, String clientSecret, String clientName, 
-                           List<String> redirectUris, List<String> scopes) {
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-        this.clientName = clientName;
-        this.redirectUris = redirectUris;
-        this.scopes = scopes;
-    }
-    
-    // Getters and Setters
-    public String getClientId() {
-        return clientId;
-    }
-    
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-    
-    public String getClientSecret() {
-        return clientSecret;
-    }
-    
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
-    }
-    
-    public String getClientName() {
-        return clientName;
-    }
-    
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
-    }
-    
-    public List<String> getRedirectUris() {
-        return redirectUris;
-    }
-    
-    public void setRedirectUris(List<String> redirectUris) {
-        this.redirectUris = redirectUris;
-    }
-    
-    public List<String> getScopes() {
-        return scopes;
-    }
-    
-    public void setScopes(List<String> scopes) {
-        this.scopes = scopes;
-    }
+    private List<@Size(max = 100, message = "Scope must be less than 100 characters") String> scopes;
 }

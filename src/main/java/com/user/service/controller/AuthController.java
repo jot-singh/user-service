@@ -24,6 +24,7 @@ import com.user.service.dto.response.BaseResponseDto;
 import com.user.service.services.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -36,23 +37,23 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody AuthRequestDto authRequestDto) {
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody AuthRequestDto authRequestDto) {
         return ResponseEntity.ok(authService.login(authRequestDto));
     }
 
     @PostMapping("/signUp")
-    public ResponseEntity<AuthResponseDto> signUp(@RequestBody AuthRequestDto authRequestDto) {
+    public ResponseEntity<AuthResponseDto> signUp(@Valid @RequestBody AuthRequestDto authRequestDto) {
         return ResponseEntity.ok(authService.signUp(authRequestDto));
     }
 
     //Update User Details
     @PutMapping("/update/{userId}")
-    public ResponseEntity<BaseResponseDto> updateUser(@RequestParam String userId, @RequestBody AuthRequestDto authRequestDto) {
+    public ResponseEntity<BaseResponseDto> updateUser(@RequestParam String userId, @Valid @RequestBody AuthRequestDto authRequestDto) {
         return ResponseEntity.ok(authService.updateUser(userId,authRequestDto));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<AuthResponseDto> logout(@RequestBody LogoutRequestDto logoutRequestDto) {
+    public ResponseEntity<AuthResponseDto> logout(@Valid @RequestBody LogoutRequestDto logoutRequestDto) {
         authService.logout(logoutRequestDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }

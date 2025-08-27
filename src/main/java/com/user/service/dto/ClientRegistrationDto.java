@@ -1,63 +1,38 @@
 package com.user.service.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
+/**
+ * DTO for OAuth2 client registration
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClientRegistrationDto {
     
     @Size(max = 50, message = "Client ID must be less than 50 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Client ID can only contain letters, numbers, hyphens, and underscores")
     private String clientId;
     
     @NotBlank(message = "Client name is required")
     @Size(max = 100, message = "Client name must be less than 100 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9\\s_-]+$", message = "Client name can only contain letters, numbers, spaces, hyphens, and underscores")
     private String clientName;
     
-    private List<String> redirectUris;
+    private List<@Pattern(
+        regexp = "^https?://[\\w\\d\\-._~:/?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$",
+        message = "Redirect URI must be a valid HTTP/HTTPS URL"
+    ) String> redirectUris;
     
-    private List<String> scopes;
-    
-    // Constructors
-    public ClientRegistrationDto() {}
-    
-    public ClientRegistrationDto(String clientId, String clientName, List<String> redirectUris, List<String> scopes) {
-        this.clientId = clientId;
-        this.clientName = clientName;
-        this.redirectUris = redirectUris;
-        this.scopes = scopes;
-    }
-    
-    // Getters and Setters
-    public String getClientId() {
-        return clientId;
-    }
-    
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-    
-    public String getClientName() {
-        return clientName;
-    }
-    
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
-    }
-    
-    public List<String> getRedirectUris() {
-        return redirectUris;
-    }
-    
-    public void setRedirectUris(List<String> redirectUris) {
-        this.redirectUris = redirectUris;
-    }
-    
-    public List<String> getScopes() {
-        return scopes;
-    }
-    
-    public void setScopes(List<String> scopes) {
-        this.scopes = scopes;
-    }
+    private List<@Pattern(
+        regexp = "^[a-z][a-z0-9._-]*$",
+        message = "Scope must start with a letter and contain only lowercase letters, numbers, dots, underscores, and hyphens"
+    ) String> scopes;
 }
