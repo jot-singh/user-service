@@ -19,13 +19,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.http.MediaType;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -41,72 +43,55 @@ public class SpringSecurityConfig {
 	@Autowired
 	private UserDao userDao;
 
-	// @Bean
-	// @Order(1)
-	// public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
-	// 		throws Exception {
-	// 	OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-	// 	http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-	// 		.oidc(Customizer.withDefaults());	// Enable OpenID Connect 1.0
-	// 	http
-	// 		.exceptionHandling((exceptions) -> exceptions
-	// 			.defaultAuthenticationEntryPointFor(
-	// 				new LoginUrlAuthenticationEntryPoint("/login"),
-	// 				new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-	// 			)
-	// 		)
-	// 		.oauth2ResourceServer((resourceServer) -> resourceServer
-	// 			.jwt(Customizer.withDefaults()));
-
-	// 	return http.build();
-	// }
-
-	// @Bean
-	// @Order(2)
-	// public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
-	// 		throws Exception {
-	// 	http
-	// 		.securityMatcher("/auth/**")
-	// 		.authorizeHttpRequests((authorize) -> authorize
-	// 			.requestMatchers("/auth/login").permitAll()     // Allow login endpoint
-	// 			.requestMatchers("/auth/signUp").permitAll()    // Allow signup endpoint
-	// 			.requestMatchers("/error/**").permitAll()       // Allow error endpoints
-	// 			.anyRequest().authenticated()
-	// 		)
-	// 		.csrf(csrf -> csrf.disable())
-	// 		.cors(Customizer.withDefaults())
-	// 		.sessionManagement(session -> session
-    //         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-    //     	);  // Make it stateless for JWT
-
-	// 	return http.build();
-
-
-	// }
-
 	@Bean
 	@Order(1)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
-        http
-            .securityMatcher("/**")  // Changed from /auth/** to /** to catch all routes
-            .authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/auth/login").permitAll()     
-                .requestMatchers("/auth/signUp").permitAll()    
-                .requestMatchers("/error/**").permitAll()       
-                .anyRequest().authenticated()
-            )
-            .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+			throws Exception {
+		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+		http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+			.oidc(Customizer.withDefaults());	// Enable OpenID Connect 1.0
+		http
+			.exceptionHandling((exceptions) -> exceptions
+				.defaultAuthenticationEntryPointFor(
+					new LoginUrlAuthenticationEntryPoint("/login"),
+					new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+				)
+			)
+			.oauth2ResourceServer((resourceServer) -> resourceServer
+				.jwt(Customizer.withDefaults()));
 
-        return http.build();
-    }
-    
+		return http.build();
+	}
 
+	@Bean
+	@Order(2)
+	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+			throws Exception {
+		http
+			.securityMatcher("/auth/**", "/clients/**", "/h2-console/**")
+			.authorizeHttpRequests((authorize) -> authorize
+				.requestMatchers("/auth/login").permitAll()     // Allow login endpoint
+				.requestMatchers("/auth/signUp").permitAll()    // Allow signup endpoint
+				.requestMatchers("/clients/bootstrap/**").permitAll() // Allow bootstrap endpoints
+				.requestMatchers("/h2-console/**").permitAll()  // Allow H2 console for local dev
+				.requestMatchers("/error/**").permitAll()       // Allow error endpoints
+				.anyRequest().authenticated()
+			)
+			.csrf(csrf -> csrf
+				.ignoringRequestMatchers("/h2-console/**") // Disable CSRF for H2 console
+				.disable()
+			)
+			.headers(headers -> headers
+				.frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow H2 console frames
+			)
+			.cors(Customizer.withDefaults())
+			.sessionManagement(session -> session
+	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	    	)  // Make it stateless for JWT
+			.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
+		return http.build();
+	}
 	@Bean
 	public UserDetailsService userDetailsService() {
 		return username -> userDao.findByUsername(username)
@@ -118,10 +103,7 @@ public class SpringSecurityConfig {
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
 	}
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+	// PasswordEncoder bean is already defined in AppConfigurations
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -164,7 +146,7 @@ public class SpringSecurityConfig {
 		return AuthorizationServerSettings.builder().build();
 	}
 
-	@Bean
+	// Note: JpaRegisteredClientRepository is automatically configured as a @Component	@Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(userDetailsService());
     }
