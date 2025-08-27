@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +20,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
@@ -35,9 +38,6 @@ import com.user.service.security.jwt.JwtAuthenticationFilter;
 @Configuration
 @EnableWebSecurity
 public class SpringSecurityConfig {
-	@Autowired
-	private BCryptPasswordEncoder bCryptPasswordEncoder;
-
 	@Autowired
 	private UserDao userDao;
 
@@ -112,10 +112,20 @@ public class SpringSecurityConfig {
 		return username -> userDao.findByUsername(username)
 				.map(user -> User.builder()
 						.username(user.getEmail())
-						.password(bCryptPasswordEncoder.encode("password"))
+						.password(user.getPassword()) // Use actual stored password (already encoded)
 						.roles(user.getRole().getName())
 						.build())
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+	}
+
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
 	}
 
 	@Bean
