@@ -1,8 +1,11 @@
 package com.user.service.services.impl;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,9 @@ public class SubjectAuthServiceImpl implements AuthService {
     private final UserDao userDao;
     private final SessionDao sessionDao;
     private final BCryptPasswordEncoder passwordEncoder;
+
+    @Value("${session.concurrent.max:1}")
+    private int maxConcurrentSessions;
 
     public SubjectAuthServiceImpl(UserDao userDao, SessionDao sessionDao, BCryptPasswordEncoder passwordEncoder) {
         this.userDao = userDao;
@@ -63,6 +69,14 @@ public class SubjectAuthServiceImpl implements AuthService {
         user.resetFailedAttempts();
         user.updateLastLogin();
         userDao.save(user);
+
+        // Enforce concurrent session control
+        List<Session> activeSessions = sessionDao.findByUsername(user.getUsername());
+        if (activeSessions.size() >= maxConcurrentSessions) {
+            activeSessions.stream()
+                    .min(Comparator.comparing(Session::getCreatedAt))
+                    .ifPresent(sessionDao::delete);
+        }
         
         String token = JwtTokenUtil.generateToken(user.getUsername());
         Session session = new Session();
@@ -116,11 +130,8 @@ public class SubjectAuthServiceImpl implements AuthService {
     @Override
     public void logout(LogoutRequestDto logoutRequestDto) {
         if (validUsername(logoutRequestDto.getUsername()) && validJWTToken(logoutRequestDto.getToken())) {
-            Session session = sessionDao.findByTokenAndUsername(logoutRequestDto.getToken(),
-                    logoutRequestDto.getUsername());
-            if (session != null) {
-                sessionDao.delete(session);
-            }
+            sessionDao.findByTokenAndUsername(logoutRequestDto.getToken(),
+                    logoutRequestDto.getUsername()).ifPresent(sessionDao::delete);
         }
 
     }

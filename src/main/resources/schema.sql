@@ -130,6 +130,18 @@ CREATE TABLE IF NOT EXISTS user_addresses (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Verification tokens table for email verification and account activation
+CREATE TABLE IF NOT EXISTS verification_tokens (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    user_id BIGINT NOT NULL,
+    token_type VARCHAR(50) NOT NULL DEFAULT 'EMAIL_VERIFICATION',
+    expiry_date TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -143,3 +155,6 @@ CREATE INDEX IF NOT EXISTS idx_token_user_id ON token(user_id);
 CREATE INDEX IF NOT EXISTS idx_token_value ON token(token_value);
 CREATE INDEX IF NOT EXISTS idx_address_user_id ON user_addresses(user_id);
 CREATE INDEX IF NOT EXISTS idx_address_default ON user_addresses(user_id, is_default);
+CREATE INDEX IF NOT EXISTS idx_verification_token ON verification_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_verification_user_id ON verification_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_verification_expiry ON verification_tokens(expiry_date);

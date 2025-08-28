@@ -1,15 +1,15 @@
 package com.user.service.dao;
 
 import com.user.service.entity.Session;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface SessionDao {
-    void save(Session session);
+import java.util.List;
+import java.util.Optional;
 
-    Session findByUsername(String username);
-
-    Session findByToken(String token);
-
-    Session findByTokenAndUsername(String token, String username);
-
-    void delete(Session session);
+@Repository
+public interface SessionDao extends JpaRepository<Session, String> {
+    List<Session> findByUsername(String username);
+    Optional<Session> findByTokenAndUsername(String token, String username);
 }
+

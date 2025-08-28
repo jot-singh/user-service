@@ -75,6 +75,12 @@ public class SpringSecurityConfig {
 			.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/auth/login").permitAll()     // Allow login endpoint
 				.requestMatchers("/auth/signUp").permitAll()    // Allow signup endpoint
+				.requestMatchers("/auth/register").permitAll()  // Allow user registration
+				.requestMatchers("/auth/verify").permitAll()    // Allow email verification
+				.requestMatchers("/auth/activate").permitAll()  // Allow account activation
+				.requestMatchers("/auth/resend-verification").permitAll() // Allow resend verification
+				.requestMatchers("/auth/check-email").permitAll() // Allow email availability check
+				.requestMatchers("/auth/check-username").permitAll() // Allow username availability check
 				.requestMatchers("/clients/bootstrap/**").permitAll() // Allow bootstrap endpoints
 				.requestMatchers("/h2-console/**").permitAll()  // Allow H2 console for local dev
 				.requestMatchers("/error/**").permitAll()       // Allow error endpoints
