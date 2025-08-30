@@ -71,7 +71,7 @@ public class SpringSecurityConfig {
 	public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
 			throws Exception {
 		http
-			.securityMatcher("/auth/**", "/clients/**", "/h2-console/**", "/users/**", "/admin/**")
+			.securityMatcher("/auth/**", "/clients/**", "/h2-console/**", "/users/**", "/admin/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**")
 			.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/auth/login").permitAll()     // Allow login endpoint
 				.requestMatchers("/auth/signUp").permitAll()    // Allow signup endpoint
@@ -84,6 +84,7 @@ public class SpringSecurityConfig {
 				.requestMatchers("/clients/bootstrap/**").permitAll() // Allow bootstrap endpoints
 				.requestMatchers("/h2-console/**").permitAll()  // Allow H2 console for local dev
 				.requestMatchers("/error/**").permitAll()       // Allow error endpoints
+				.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Allow Swagger UI
 				.requestMatchers("/users/**").authenticated()   // User endpoints require authentication
 				.requestMatchers("/admin/**").hasRole("ADMIN")  // Admin endpoints require ADMIN role
 				.anyRequest().authenticated()
