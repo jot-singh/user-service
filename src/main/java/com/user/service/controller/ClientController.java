@@ -168,18 +168,40 @@ public class ClientController {
             String clientSecret = "product-service-secret";
             String encodedClientSecret = passwordEncoder.encode(clientSecret);
 
+            // Check if client already exists
+            RegisteredClient existingClient = registeredClientRepository.findByClientId(clientId);
+            if (existingClient != null) {
+                // Client already exists, return current configuration
+                ClientResponseDto response = new ClientResponseDto();
+                response.setClientId(clientId);
+                response.setClientSecret(clientSecret);
+                response.setClientName("Product Service");
+                response.setScopes(List.of("user.read", "user.validate", "read", "write", "openid", "profile"));
+                response.setRedirectUris(List.of("http://localhost:3000/callback"));
+                return ResponseEntity.ok(response);
+            }
+
             RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
                     .clientId(clientId)
                     .clientSecret(encodedClientSecret)
                     .clientName("Product Service")
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                     .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                    .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                    .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                    .redirectUris(uris -> {
+                        uris.add("http://localhost:3000/callback");
+                    })
                     .scopes(scopes -> {
                         scopes.add("user.read");
                         scopes.add("user.validate");
+                        scopes.add("read");
+                        scopes.add("write");
+                        scopes.add("openid");
+                        scopes.add("profile");
                     })
                     .clientSettings(ClientSettings.builder()
-                            .requireAuthorizationConsent(false) // Service-to-service doesn't need consent
+                            .requireAuthorizationConsent(true)
                             .build())
                     .tokenSettings(TokenSettings.builder()
                             .build())
@@ -191,7 +213,8 @@ public class ClientController {
             response.setClientId(clientId);
             response.setClientSecret(clientSecret);
             response.setClientName("Product Service");
-            response.setScopes(List.of("user.read", "user.validate"));
+            response.setScopes(List.of("user.read", "user.validate", "read", "write", "openid", "profile"));
+            response.setRedirectUris(List.of("http://localhost:3000/callback"));
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
