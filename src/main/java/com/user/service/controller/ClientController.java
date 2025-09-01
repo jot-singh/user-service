@@ -23,24 +23,33 @@ import com.user.service.security.models.Client;
 import com.user.service.security.repositories.ClientRepository;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
+/**
+ * Controller for OAuth2 client management operations
+ * Provides endpoints for client registration and management
+ */
 @RestController
 @RequestMapping("/clients")
+@Slf4j
 public class ClientController {
 
     @Autowired
     private RegisteredClientRepository registeredClientRepository;
-    
+
     @Autowired
     private ClientRepository clientRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     /**
-     * Register a new OAuth2 client
+     * Register a new OAuth2 client (Admin only)
      */
     @PostMapping("/register")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClientResponseDto> registerClient(@Valid @RequestBody ClientRegistrationDto request) {
         try {
             // Generate client credentials
@@ -95,9 +104,10 @@ public class ClientController {
     }
 
     /**
-     * Get client information by clientId
+     * Get client information by clientId (Admin only)
      */
     @GetMapping("/{clientId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClientResponseDto> getClient(@PathVariable String clientId) {
         try {
             RegisteredClient registeredClient = registeredClientRepository.findByClientId(clientId);
@@ -119,9 +129,10 @@ public class ClientController {
     }
 
     /**
-     * List all registered clients (admin endpoint)
+     * List all registered clients (Admin only)
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ClientResponseDto>> getAllClients() {
         try {
             List<Client> clients = clientRepository.findAll();
@@ -141,10 +152,11 @@ public class ClientController {
         }
     }
 
-    /**
-     * Delete a client registration
+        /**
+     * Delete a client registration (Admin only)
      */
     @DeleteMapping("/{clientId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteClient(@PathVariable String clientId) {
         try {
             Optional<Client> client = clientRepository.findByClientId(clientId);

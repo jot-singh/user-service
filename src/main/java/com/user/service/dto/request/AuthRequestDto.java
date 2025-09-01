@@ -34,8 +34,9 @@ public class AuthRequestDto {
     private String password;
     
     @Pattern(
-        regexp = "^(USER|ADMIN|MODERATOR)$",
-        message = "Role must be one of: USER, ADMIN, MODERATOR"
+        regexp = "^(CUSTOMER|MERCHANT|ADMIN|MODERATOR)$",
+        message = "Role must be one of: CUSTOMER, MERCHANT, ADMIN, MODERATOR"
     )
-    private String role = "USER"; // Default role
+    @Builder.Default
+    private String role = "CUSTOMER"; // Default role
 }

@@ -81,13 +81,11 @@ public class SpringSecurityConfig {
 				.requestMatchers("/auth/resend-verification").permitAll() // Allow resend verification
 				.requestMatchers("/auth/check-email").permitAll() // Allow email availability check
 				.requestMatchers("/auth/check-username").permitAll() // Allow username availability check
-				.requestMatchers("/clients/bootstrap/**").permitAll() // Allow bootstrap endpoints
+				.requestMatchers("/clients/bootstrap/**").permitAll() // Allow bootstrap endpoints for initial setup
 				.requestMatchers("/h2-console/**").permitAll()  // Allow H2 console for local dev
 				.requestMatchers("/error/**").permitAll()       // Allow error endpoints
 				.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Allow Swagger UI
-				.requestMatchers("/users/**").authenticated()   // User endpoints require authentication
-				.requestMatchers("/admin/**").hasRole("ADMIN")  // Admin endpoints require ADMIN role
-				.anyRequest().authenticated()
+				.anyRequest().authenticated()  // All other requests require authentication
 			)
 			.csrf(csrf -> csrf
 				.ignoringRequestMatchers("/h2-console/**") // Disable CSRF for H2 console

@@ -22,7 +22,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin")
 @Slf4j
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
@@ -39,14 +38,14 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         log.info("Admin getting all users - page: {}, size: {}", page, size);
-        
+
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<UserResponseDto> users = userService.getAllUsers(pageable);
             return ResponseEntity.ok(users);
         } catch (Exception e) {
             log.error("Error getting all users", e);
-            throw e; // Let GlobalExceptionHandler handle it
+            throw e;
         }
     }
 
