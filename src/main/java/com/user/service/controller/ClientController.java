@@ -176,7 +176,7 @@ public class ClientController {
                 response.setClientId(clientId);
                 response.setClientSecret(clientSecret);
                 response.setClientName("Product Service");
-                response.setScopes(List.of("user.read", "user.validate", "read", "write", "openid", "profile"));
+                response.setScopes(List.of("user.read", "user.validate", "read", "write", "openid", "profile", "CUSTOMER", "ADMIN"));
                 response.setRedirectUris(List.of("http://localhost:3000/callback"));
                 return ResponseEntity.ok(response);
             }
@@ -199,6 +199,8 @@ public class ClientController {
                         scopes.add("write");
                         scopes.add("openid");
                         scopes.add("profile");
+                        scopes.add("CUSTOMER");
+                        scopes.add("ADMIN");
                     })
                     .clientSettings(ClientSettings.builder()
                             .requireAuthorizationConsent(true)
@@ -213,7 +215,7 @@ public class ClientController {
             response.setClientId(clientId);
             response.setClientSecret(clientSecret);
             response.setClientName("Product Service");
-            response.setScopes(List.of("user.read", "user.validate", "read", "write", "openid", "profile"));
+            response.setScopes(List.of("user.read", "user.validate", "read", "write", "openid", "profile", "CUSTOMER", "ADMIN"));
             response.setRedirectUris(List.of("http://localhost:3000/callback"));
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
