@@ -17,11 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import java.time.LocalDateTime;
 
@@ -61,7 +63,9 @@ public class UserProfileManagementTest {
     
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .build();
         
         // Create test user
         testUser = User.builder()
@@ -101,6 +105,7 @@ public class UserProfileManagementTest {
     // User Profile Tests
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testGetUserProfile() throws Exception {
         mockMvc.perform(get("/users/{userId}/profile", testUser.getId())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -115,6 +120,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testUpdateUserProfile() throws Exception {
         UserProfileRequestDto updateRequest = UserProfileRequestDto.builder()
                 .firstName("Updated")
@@ -144,6 +150,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testUpdateUserProfileWithInvalidData() throws Exception {
         UserProfileRequestDto invalidRequest = UserProfileRequestDto.builder()
                 .firstName("") // Invalid: empty string
@@ -160,6 +167,7 @@ public class UserProfileManagementTest {
     // Address Management Tests
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testGetUserAddresses() throws Exception {
         mockMvc.perform(get("/users/{userId}/addresses", testUser.getId())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -172,6 +180,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testGetSpecificAddress() throws Exception {
         mockMvc.perform(get("/users/{userId}/addresses/{addressId}", testUser.getId(), testAddress.getId())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -182,6 +191,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testCreateAddress() throws Exception {
         AddressRequestDto newAddress = AddressRequestDto.builder()
                 .addressLine1("456 New Street")
@@ -207,6 +217,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testCreateAddressWithInvalidData() throws Exception {
         AddressRequestDto invalidAddress = AddressRequestDto.builder()
                 .addressLine1("") // Invalid: empty string
@@ -223,6 +234,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testUpdateAddress() throws Exception {
         AddressRequestDto updateRequest = AddressRequestDto.builder()
                 .addressLine1("Updated Street")
@@ -248,6 +260,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testDeleteAddress() throws Exception {
         mockMvc.perform(delete("/users/{userId}/addresses/{addressId}", testUser.getId(), testAddress.getId())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -259,6 +272,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testSetDefaultAddress() throws Exception {
         // Create a second address
         Address secondAddress = Address.builder()
@@ -289,6 +303,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testGetDefaultAddress() throws Exception {
         mockMvc.perform(get("/users/{userId}/addresses/default", testUser.getId())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -300,6 +315,7 @@ public class UserProfileManagementTest {
     // Security Tests
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testAccessDeniedForOtherUserAddress() throws Exception {
         // Create another user
         User otherUser = User.builder()
@@ -319,6 +335,7 @@ public class UserProfileManagementTest {
     }
     
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testUpdateOtherUserAddress() throws Exception {
         User otherUser = User.builder()
                 .username("otheruser")

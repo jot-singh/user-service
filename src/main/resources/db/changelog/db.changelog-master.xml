@@ -40,4 +40,34 @@
         </addColumn>
     </changeSet>
 
+        <changeSet id="20250903-01-fix-role-column-and-values" author="copilot">
+        <comment>Convert role column from TINYINT to VARCHAR and update ordinal values to enum strings</comment>
+        
+        <!-- First, drop the existing check constraint -->
+        <sql>
+            ALTER TABLE users DROP CONSTRAINT users_chk_1;
+        </sql>
+        
+        <!-- Then, modify the column type from TINYINT to VARCHAR -->
+        <sql>
+            ALTER TABLE users MODIFY COLUMN role VARCHAR(20);
+        </sql>
+        
+        <!-- Update the data values from ordinals to strings -->
+        <sql>
+            UPDATE users SET role = 'CUSTOMER' WHERE role = '0';
+        </sql>
+        <sql>
+            UPDATE users SET role = 'MERCHANT' WHERE role = '1';
+        </sql>
+        <sql>
+            UPDATE users SET role = NULL WHERE role NOT IN ('CUSTOMER', 'MERCHANT');
+        </sql>
+        
+        <!-- Add new constraint for enum values -->
+        <sql>
+            ALTER TABLE users ADD CONSTRAINT chk_role CHECK (role IN ('CUSTOMER', 'MERCHANT', 'ADMIN', 'MODERATOR') OR role IS NULL);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
