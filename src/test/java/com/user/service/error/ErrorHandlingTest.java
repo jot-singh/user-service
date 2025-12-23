@@ -3,6 +3,7 @@ package com.user.service.error;
 import com.user.service.dto.response.ApiResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test class to verify the error handling infrastructure.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 public class ErrorHandlingTest {
 
     @Test
