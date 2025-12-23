@@ -386,6 +386,296 @@ curl -X GET "http://localhost:8444/users/profile" \
 
 ---
 
+## 👤 User Registration & Login Guide
+
+### Regular User Registration
+
+#### Step 1: Register a New User
+
+```bash
+curl -X POST "http://localhost:8444/auth/signUp" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "customer1",
+    "email": "customer@example.com",
+    "password": "Password@123",
+    "firstName": "Jane",
+    "lastName": "Smith"
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjdXN0b21lcjEi...",
+  "expiresAt": "2024-12-24T10:30:00",
+  "user": {
+    "id": 1,
+    "username": "customer1",
+    "email": "customer@example.com",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "role": "CUSTOMER",
+    "emailVerified": false
+  }
+}
+```
+
+#### Step 2: Login with User Credentials
+
+```bash
+curl -X POST "http://localhost:8444/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "customer1",
+    "password": "Password@123"
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjdXN0b21lcjEi...",
+  "expiresAt": "2024-12-24T10:30:00",
+  "user": {
+    "id": 1,
+    "username": "customer1",
+    "email": "customer@example.com",
+    "role": "CUSTOMER"
+  }
+}
+```
+
+#### Step 3: Access User Profile
+
+```bash
+# Save token from login response
+TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjdXN0b21lcjEi..."
+
+# Get user profile
+curl -X GET "http://localhost:8444/users/profile" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### Step 4: Update User Profile
+
+```bash
+curl -X PUT "http://localhost:8444/users/profile" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "Jane",
+    "lastName": "Smith-Johnson",
+    "phone": "+1-555-0123"
+  }'
+```
+
+#### Step 5: Add Address
+
+```bash
+curl -X POST "http://localhost:8444/users/address" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "street": "123 Main Street",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA",
+    "type": "HOME"
+  }'
+```
+
+---
+
+## 👨‍💼 Admin Registration & Login Guide
+
+### Option 1: Register Admin via Database
+
+Admins cannot self-register through the API. Create admin users directly in the database:
+
+```sql
+-- Connect to your database
+USE userdb;
+
+-- Insert admin user
+INSERT INTO users (
+    username, 
+    password, 
+    email, 
+    first_name, 
+    last_name, 
+    role, 
+    email_verified, 
+    account_locked,
+    created_at
+) VALUES (
+    'admin',
+    '$2a$10$xN3wV8Jb0eKQ0P4vKTqXxO7iRxEw0Z0fGMQY9r8v8/H2hJKq9nGzS', -- Password@123
+    'admin@example.com',
+    'Admin',
+    'User',
+    'ADMIN',
+    true,
+    false,
+    NOW()
+);
+```
+
+**Note:** The password hash above is for `Password@123`. In production, generate a new BCrypt hash:
+
+```bash
+# Using an online BCrypt generator or Java code
+BCrypt.hashpw("YourSecurePassword", BCrypt.gensalt(10))
+```
+
+### Option 2: Use Bootstrap Script
+
+Create a bootstrap script to initialize admin on first startup:
+
+```bash
+# Admin bootstrap (add to application startup)
+curl -X POST "http://localhost:8444/auth/bootstrap/admin" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "Admin@2024!",
+    "email": "admin@ecommerce.com",
+    "firstName": "System",
+    "lastName": "Administrator"
+  }'
+```
+
+### Admin Login & Operations
+
+#### Step 1: Login as Admin
+
+```bash
+curl -X POST "http://localhost:8444/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "Password@123"
+  }'
+```
+
+**Expected Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiI...",
+  "expiresAt": "2024-12-24T10:30:00",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@example.com",
+    "role": "ADMIN"
+  }
+}
+```
+
+#### Step 2: View All Users (Admin Only)
+
+```bash
+# Save admin token
+ADMIN_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiI..."
+
+# List all users
+curl -X GET "http://localhost:8444/admin/users" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+#### Step 3: Register OAuth2 Client (Admin Only)
+
+```bash
+curl -X POST "http://localhost:8444/clients/register" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clientId": "mobile-app",
+    "clientSecret": "mobile-secret-2024",
+    "clientName": "Mobile Application",
+    "redirectUris": ["https://mobile.app/callback"],
+    "scopes": ["read", "write"],
+    "authorizationGrantTypes": ["authorization_code", "refresh_token"]
+  }'
+```
+
+#### Step 4: Delete User (Admin Only)
+
+```bash
+curl -X DELETE "http://localhost:8444/admin/users/123" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+#### Step 5: Lock/Unlock User Account (Admin Only)
+
+```bash
+# Lock user account
+curl -X PUT "http://localhost:8444/admin/users/123/lock" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Unlock user account
+curl -X PUT "http://localhost:8444/admin/users/123/unlock" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+---
+
+## 🔑 Role-Based Access Control (RBAC)
+
+### Available Roles
+
+| Role | Description | Permissions |
+|------|-------------|-------------|
+| **CUSTOMER** | Regular user | - View/edit own profile<br>- Manage own addresses<br>- Place orders |
+| **MERCHANT** | Seller/vendor | - All CUSTOMER permissions<br>- Manage products<br>- View sales |
+| **ADMIN** | System administrator | - All MERCHANT permissions<br>- Manage all users<br>- Manage OAuth2 clients<br>- System configuration |
+
+### Protected Endpoints by Role
+
+```java
+// Public endpoints (no authentication required)
+/auth/login
+/auth/signUp
+/.well-known/oauth-authorization-server
+
+// Authenticated endpoints (any logged-in user)
+/users/profile
+/users/address/**
+
+// Admin-only endpoints
+/admin/**
+/clients/** (except bootstrap)
+
+// Merchant endpoints
+/merchant/products/**
+/merchant/orders/**
+```
+
+---
+
+## 🔐 Password Requirements
+
+Passwords must meet the following requirements:
+
+- ✅ Minimum 8 characters
+- ✅ At least one uppercase letter (A-Z)
+- ✅ At least one lowercase letter (a-z)
+- ✅ At least one digit (0-9)
+- ✅ At least one special character (@$!%*?&)
+
+**Valid password examples:**
+- `Password@123`
+- `SecurePass!2024`
+- `MyP@ssw0rd`
+
+**Invalid password examples:**
+- `password` (no uppercase, digit, or special char)
+- `Pass123` (no special character)
+- `PASS@123` (no lowercase letter)
+
+---
+
 ## 🔧 Development Workflow
 
 ### Project Structure
